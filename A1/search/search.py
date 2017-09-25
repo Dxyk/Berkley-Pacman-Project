@@ -19,7 +19,6 @@ Pacman agents (in searchAgents.py).
 
 import util
 
-
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -27,9 +26,6 @@ class SearchProblem:
 
     You do not need to change anything in this class, ever.
     """
-
-    def __init__(self):
-        pass
 
     def getStartState(self):
         """
@@ -76,7 +72,6 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return [s, s, w, s, w, w, s, w]
 
-
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -92,30 +87,88 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = problem.getStartState()
+    if problem.isGoalState(start):
+        return []
+    stack = util.Stack()
+    # each ele in the stack is a path (tuple) of tuple (state, direction, cost)
+    stack.push(((start, None, 0),))
+    while not stack.isEmpty():
+        path = stack.pop()
+        current_state = path[-1][0]
+
+        if problem.isGoalState(current_state):
+            return [path[i][1] for i in range(1, len(path))]
+
+        for succ_state in problem.getSuccessors(current_state):
+            if not any(succ_state[0] == s[0] for s in path):
+                stack.push(path + (succ_state,))
+    print "No solution found using DFS"
+    return None
 
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start = problem.getStartState()
+    if problem.isGoalState(start):
+        return []
+    queue = util.Queue()
+    queue.push(((start, None, 0),))
+    seen = {start,}  # a set of seen states
+    while not queue.isEmpty():
+        path = queue.pop()
+        current_state = path[-1][0]
+
+        if problem.isGoalState(current_state):
+            return [path[i][1] for i in range(1, len(path))]
+
+        for succ_state in problem.getSuccessors(current_state):
+            if not succ_state[0] in seen:
+                seen.add(succ_state[0])
+                queue.push(path + (succ_state,))
+
+    print "No solution found using BFS"
+    return None
 
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pq = util.PriorityQueue()
+    start = problem.getStartState()
+    # cycle checking
+    seen = {start: 0}  # a dict of seen states: cost
+    if problem.isGoalState(start):
+        return []
+    pq.push(((start, None, 0),), 0)
+    while not pq.isEmpty():
+        path = pq.pop()
+        current_state = path[-1][0]
+        actions = [path[i][1] for i in range(1, len(path))]
+        cost = problem.getCostOfActions(actions)
+
+        if problem.isGoalState(current_state):
+            return actions
+
+        for succ_state in problem.getSuccessors(current_state):
+
+            if not succ_state[0] in seen or\
+                            problem.getCostOfActions(actions) + succ_state[2] < seen[succ_state[0]]:
+                seen[succ_state[0]] = cost + succ_state[2]
+                pq.update(path + (succ_state,), cost + succ_state[2])
+    print "No solution found using UCS"
+    return None
 
 
-def nullHeuristic(state, problem = None):
+def nullHeuristic(state, problem=None):
     """
     A heuristic function estimates the cost from the current state to the nearest
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
 
-
-def aStarSearch(problem, heuristic = nullHeuristic):
+def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
