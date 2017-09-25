@@ -1,3 +1,4 @@
+python pacman.py -z 0.5 --frameTime 0 -p SearchAgent -l tinyMaze -a fn=ucs
 python pacman.py
 python pacman.py --layout testMaze --pacman GoWestAgent
 python pacman.py --layout tinyMaze --pacman GoWestAgent
