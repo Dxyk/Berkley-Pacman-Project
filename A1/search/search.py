@@ -19,6 +19,7 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -72,6 +73,7 @@ def tinyMazeSearch(problem):
     w = Directions.WEST
     return [s, s, w, s, w, w, s, w]
 
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -115,7 +117,7 @@ def breadthFirstSearch(problem):
         return []
     queue = util.Queue()
     queue.push(((start, None, 0),))
-    seen = {start,}  # a set of seen states
+    seen = {start, }  # a set of seen states
     while not queue.isEmpty():
         path = queue.pop()
         current_state = path[-1][0]
@@ -132,6 +134,10 @@ def breadthFirstSearch(problem):
     return None
 
 
+def getCost(problem, actions, new_state):
+    return problem.getCostOfActions(actions) + new_state[2]
+
+
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
@@ -146,32 +152,56 @@ def uniformCostSearch(problem):
         path = pq.pop()
         current_state = path[-1][0]
         actions = [path[i][1] for i in range(1, len(path))]
-        cost = problem.getCostOfActions(actions)
 
         if problem.isGoalState(current_state):
             return actions
 
         for succ_state in problem.getSuccessors(current_state):
-
-            if not succ_state[0] in seen or\
-                            problem.getCostOfActions(actions) + succ_state[2] < seen[succ_state[0]]:
-                seen[succ_state[0]] = cost + succ_state[2]
-                pq.update(path + (succ_state,), cost + succ_state[2])
+            cost = getCost(problem, actions, succ_state)
+            if not succ_state[0] in seen or cost < seen[succ_state[0]]:
+                seen[succ_state[0]] = cost
+                pq.update(path + (succ_state,), cost)
     print "No solution found using UCS"
     return None
 
 
-def nullHeuristic(state, problem=None):
+def nullHeuristic(state, problem = None):
     """
     A heuristic function estimates the cost from the current state to the nearest
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
 
-def aStarSearch(problem, heuristic=nullHeuristic):
+
+def aStarSearch(problem, heuristic = nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    pq = util.PriorityQueue()  # sort using f = g + h
+    start = problem.getStartState()
+    f = 0 + heuristic(start, problem)
+    # cycle checking
+    seen = {start: f}  # a dict of seen states: f
+    if problem.isGoalState(start):
+        return []
+    pq.push(((start, None, 0),), f)
+    while not pq.isEmpty():
+        path = pq.pop()
+        current_state = path[-1][0]
+        actions = [path[i][1] for i in range(1, len(path))]
+
+        if problem.isGoalState(current_state):
+            return actions
+
+        for succ_state in problem.getSuccessors(current_state):
+            g = getCost(problem, actions, succ_state)
+            h = heuristic(succ_state[0], problem)
+            f = g + h
+
+            if not succ_state[0] in seen or f < seen[succ_state[0]]:
+                seen[succ_state[0]] = f
+                pq.update(path + (succ_state,), f)
+    print "No solution found using A*S"
+    return None
 
 
 # Abbreviations
