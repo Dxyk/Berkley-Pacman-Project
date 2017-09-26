@@ -122,9 +122,13 @@ def breadthFirstSearch(problem):
         path = queue.pop()
         current_state = path[-1][0]
         actions = [path[i][1] for i in range(1, len(path))]
+        # print "path:", path
+        # print "current_state:", current_state
+        # print "actions:", actions
 
         if problem.isGoalState(current_state):
             return actions
+        # print "is not goal"
 
         for succ_state in problem.getSuccessors(current_state):
             cost = getCost(problem, actions, succ_state)

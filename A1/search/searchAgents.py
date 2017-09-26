@@ -303,6 +303,7 @@ class CornersProblem(search.SearchProblem):
 
     You must select a suitable state space and successor function
     """
+    # TODO: change corner in state such that the order doesnt matter
 
     def __init__(self, startingGameState):
         """
@@ -319,6 +320,15 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        # A been to dict to check if pacman has reached all corners
+        # been_corners: {(x, y) : bool}
+        # Returning states are tuple of (tuple of position , corner or bool)
+        self.been_corners = tuple()
+        for corner in self.corners:
+            if corner == self.startingPosition:
+                self.been_corners += (True,)
+            else:
+                self.been_corners += (corner,)
 
     def getStartState(self):
         """
@@ -326,14 +336,17 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return self.startingPosition
+        # print self.been_corners
+        return self.startingPosition, self.been_corners
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        been_corners = state[1]
+        # print been_corners
+        return all([type(b) != tuple for b in been_corners])
 
     def getSuccessors(self, state):
         """
@@ -357,7 +370,22 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            x, y = state[0]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
 
+            if not hitsWall:
+                succ_pos = (nextx, nexty)
+                succ_been_corners = tuple()
+                for tup in state[1]:
+                    if tup == succ_pos:
+                        succ_been_corners += (True,)
+                    else:
+                        succ_been_corners += (tup,)
+                successors.append([(succ_pos, succ_been_corners), action,
+                                   self.getCostOfActions([action])])
+        # print successors
         self._expanded += 1  # DO NOT CHANGE
         return successors
 
