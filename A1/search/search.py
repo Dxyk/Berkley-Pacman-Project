@@ -90,21 +90,21 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     start = problem.getStartState()
-    if problem.isGoalState(start):
-        return []
-    stack = util.Stack()
-    # each ele in the stack is a path (tuple) of tuple (state, direction, cost)
-    stack.push(((start, None, 0),))
-    while not stack.isEmpty():
-        path = stack.pop()
+    # stack of path list [((x, y), action, cost)]
+    path_stack = util.Stack()
+    path_stack.push([(start, None, 0)])
+    while not path_stack.isEmpty():
+        path = path_stack.pop()
         current_state = path[-1][0]
+        actions = [path[i][1] for i in range(1, len(path))]
 
         if problem.isGoalState(current_state):
-            return [path[i][1] for i in range(1, len(path))]
+            return actions
 
+        # path checking
         for succ_state in problem.getSuccessors(current_state):
             if not any(succ_state[0] == s[0] for s in path):
-                stack.push(path + (succ_state,))
+                path_stack.push(path + [succ_state])
     print "No solution found using DFS"
     return None
 
@@ -113,41 +113,40 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     start = problem.getStartState()
-    if problem.isGoalState(start):
-        return []
+    # a queue of path list [((x, y), action, cost)]
     queue = util.Queue()
-    queue.push(((start, None, 0),))
-    seen = {start, }  # a set of seen states
+    queue.push([(start, None, 0)])
+    # a dict of {state: cost}
+    seen = {start: 0}
     while not queue.isEmpty():
         path = queue.pop()
         current_state = path[-1][0]
+        actions = [path[i][1] for i in range(1, len(path))]
 
         if problem.isGoalState(current_state):
-            return [path[i][1] for i in range(1, len(path))]
+            return actions
 
         for succ_state in problem.getSuccessors(current_state):
-            if not succ_state[0] in seen:
-                seen.add(succ_state[0])
-                queue.push(path + (succ_state,))
+            cost = getCost(problem, actions, succ_state)
+            # cycle checking
+            if not succ_state[0] in seen or cost < seen[succ_state[0]]:
+                seen[succ_state[0]] = cost
+                queue.push(path + [succ_state])
 
     print "No solution found using BFS"
     return None
 
 
-def getCost(problem, actions, new_state):
-    return problem.getCostOfActions(actions) + new_state[2]
-
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    pq = util.PriorityQueue()
     start = problem.getStartState()
-    # cycle checking
-    seen = {start: 0}  # a dict of seen states: cost
-    if problem.isGoalState(start):
-        return []
-    pq.push(((start, None, 0),), 0)
+    # a priority queue of path list [((x, y), action, cost)] : cost
+    pq = util.PriorityQueue()
+    pq.push([(start, None, 0)], 0)
+    # a dict of {state: cost}
+    seen = {start: 0}
     while not pq.isEmpty():
         path = pq.pop()
         current_state = path[-1][0]
@@ -158,9 +157,11 @@ def uniformCostSearch(problem):
 
         for succ_state in problem.getSuccessors(current_state):
             cost = getCost(problem, actions, succ_state)
+            # cycle checking
             if not succ_state[0] in seen or cost < seen[succ_state[0]]:
                 seen[succ_state[0]] = cost
-                pq.update(path + (succ_state,), cost)
+                pq.update(path + [succ_state], cost)
+
     print "No solution found using UCS"
     return None
 
@@ -176,33 +177,43 @@ def nullHeuristic(state, problem = None):
 def aStarSearch(problem, heuristic = nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    pq = util.PriorityQueue()  # sort using f = g + h
     start = problem.getStartState()
     f = 0 + heuristic(start, problem)
-    # cycle checking
-    seen = {start: f}  # a dict of seen states: f
-    if problem.isGoalState(start):
-        return []
-    pq.push(((start, None, 0),), f)
+    # a pq of path list [((x, y), action, cost)] : f = g + h
+    pq = util.PriorityQueue()
+    pq.push([(start, None, 0)], f)
+    # a dict of {state: cost}
+    seen = {start: f}
+
     while not pq.isEmpty():
         path = pq.pop()
         current_state = path[-1][0]
         actions = [path[i][1] for i in range(1, len(path))]
+        current_cost = getCost(problem, actions, [0])
 
-        if problem.isGoalState(current_state):
+        if problem.isGoalState(current_state) and \
+                        current_cost <= seen[current_state]:
             return actions
 
         for succ_state in problem.getSuccessors(current_state):
             g = getCost(problem, actions, succ_state)
             h = heuristic(succ_state[0], problem)
             f = g + h
-
+            # cycle checking
             if not succ_state[0] in seen or f < seen[succ_state[0]]:
                 seen[succ_state[0]] = f
-                pq.update(path + (succ_state,), f)
+                pq.update(path + [succ_state], f)
+
     print "No solution found using A*S"
     return None
 
+
+# helper functions
+def getCost(problem, actions, new_state):
+    """
+    get the cost of the actions plus the new state
+    """
+    return problem.getCostOfActions(actions) + new_state[-1]
 
 # Abbreviations
 bfs = breadthFirstSearch
