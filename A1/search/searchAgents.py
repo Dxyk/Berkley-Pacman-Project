@@ -559,13 +559,23 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    
+    h_value = 0
+
+    food_list = foodGrid.asList()
+    wall_list = problem.walls.asList()
+
+    if len(food_list) == 0:
+        return h_value
+
+    h_value = min([util.manhattanDistance(position, food) for food in food_list])
+
+    return h_value
 
     # worst case: 1 point
     # if problem.isGoalState(state):
     #     return 0
     # return 1
-    return 0
+    # return 0
 
 
 class ClosestDotSearchAgent(SearchAgent):
