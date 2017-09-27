@@ -94,7 +94,7 @@ class SearchAgent(Agent):
                 heur = getattr(search, heuristic)
             else:
                 raise AttributeError, heuristic + ' is not a function in ' \
-                                                'searchAgents.py or search.py.'
+                                                  'searchAgents.py or search.py.'
             print('[SearchAgent] using function %s and heuristic %s' % (
                 fn, heuristic))
             # Note: this bit of Python trickery combines the search algorithm
@@ -303,6 +303,7 @@ class CornersProblem(search.SearchProblem):
 
     You must select a suitable state space and successor function
     """
+
     # TODO: change corner in state such that the order doesnt matter
 
     def __init__(self, startingGameState):
@@ -323,6 +324,7 @@ class CornersProblem(search.SearchProblem):
         # A been to dict to check if pacman has reached all corners
         # been_corners: {(x, y) : bool}
         # Returning states are tuple of (tuple of position , corner or bool)
+
         self.been_corners = tuple()
         for corner in self.corners:
             if corner == self.startingPosition:
@@ -385,6 +387,7 @@ class CornersProblem(search.SearchProblem):
                         succ_been_corners += (tup,)
                 successors.append([(succ_pos, succ_been_corners), action,
                                    self.getCostOfActions([action])])
+
         # print successors
         self._expanded += 1  # DO NOT CHANGE
         return successors
@@ -422,7 +425,38 @@ def cornersHeuristic(state, problem):
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    """
+    The heuristic function is the manhattan distance from the current position
+    to the nearest unvisited corner. Best case: the manhattan distance is the
+    actual cost when there is no wall in between. Worse case: the manhattan
+    distance is less than the actual cost since there will be walls in between.
+    This makes the manhattan distance an admissible heuristic function.
+    """
+    # TODO: change loop after come up with a new corner tracking structure.
+    h_value = 0
+    # Current_position: (x, y)
+    # Corners: ((True or (x, y)),)
+    current_position = state[0]
+    current_corners = state[1]
+    # Use a pq to keep track of the unvisited corners
+    pq = util.PriorityQueue()
+    for corner in current_corners:
+        if not (corner == True):
+            pq.push(corner, util.manhattanDistance(current_position, corner))
+
+    # h-value must be to visit all nodes so only one is not enough!
+    while not pq.isEmpty():
+        corner = pq.pop()
+        h_value += util.manhattanDistance(current_position, corner)
+        current_position = corner
+        # reorganize pq since after current position has changed to another
+        # corner, the manhattan distance may be different
+        temp = []
+        while not pq.isEmpty():
+            temp.append(pq.pop())
+        for corner in temp:
+            pq.push(corner, util.manhattanDistance(current_position, corner))
+    return h_value
 
 
 class AStarCornersAgent(SearchAgent):
@@ -525,6 +559,12 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
+    
+
+    # worst case: 1 point
+    # if problem.isGoalState(state):
+    #     return 0
+    # return 1
     return 0
 
 
