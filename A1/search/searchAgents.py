@@ -559,24 +559,39 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    # TODO: refine
-    h_value = 0
-
+    if problem.isGoalState(state):
+        return 0
     food_list = foodGrid.asList()
     wall_list = problem.walls.asList()
+    # bookkeeping of all distances and the corresponding count for the distances
+    # {distance: count}
+    distance_book = {}
+    for food in food_list:
+        distance = util.manhattanDistance(position, food)
+        if distance in distance_book.keys():
+            distance_book[distance] += 1
+        else:
+            distance_book[distance] = 1
 
-    if len(food_list) == 0:
-        return h_value
+    # go from the max and eat food that has the same distance
+    h = max(distance_book.keys())
+    for c in distance_book.values():
+        h += c - 1
 
-    h_value = min([util.manhattanDistance(position, food) for food in food_list])
+    # use this count to calculate how complicate the problem is
+    dead_end_count = 0
+    for food in food_list:
+        wall_count = 0
+        for wall in wall_list:
+            if util.manhattanDistance(food, wall) == 1:
+                wall_count += 1
+        if wall_count == 3:
+            dead_end_count += 1
 
-    return h_value
-
-    # worst case: 1 point
-    # if problem.isGoalState(state):
-    #     return 0
-    # return 1
-    # return 0
+    if dead_end_count >= 1:
+        return h + (dead_end_count - 1)
+    else:
+        return h
 
 
 class ClosestDotSearchAgent(SearchAgent):
@@ -611,7 +626,7 @@ class ClosestDotSearchAgent(SearchAgent):
 
         "*** YOUR CODE HERE ***"
         # use bfs to find the closest path to the nearest dot
-        return search.bfs(problem)
+        return search.uniformCostSearch(problem)
 
 
 class AnyFoodSearchProblem(PositionSearchProblem):
