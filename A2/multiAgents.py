@@ -249,59 +249,55 @@ def betterEvaluationFunction(currentGameState):
     cur_pos = currentGameState.getPacmanPosition()
     cur_food = currentGameState.getFood()
     cur_food_list = cur_food.asList()
+    curr_food_count = currentGameState.getNumFood()
     cur_ghost_state = currentGameState.getGhostStates()
     cur_scared_times = [ghostState.scaredTimer for ghostState in cur_ghost_state]
 
-    ghost_distance = [manhattanDistance(cur_pos, ghost.getPosition())for ghost in cur_ghost_state]
-    # food_distance = [manhattanDistance(cur_pos, food) for food in cur_food_list]
-    food_distance = [mazeDistance(currentGameState, food) for food in cur_food_list]
-    return 100 * max(ghost_distance) + min(food_distance)
+    # print "-" * 20
+    # print "current position: ", cur_pos
+    # print "current food: ", curr_food_count
+
+    # ghost_distance = [manhattanDistance(cur_pos, ghost.getPosition())for ghost in cur_ghost_state]
+    # food_distance = breadthFirstSearch(currentGameState)
+    #
+    # # return 10 * max(ghost_distance) - food_distance
+    # # print food_distance
+    # return food_distance
+
+    ghost_distance = sum([manhattanDistance(cur_pos, ghost.getPosition()) for ghost in cur_ghost_state])
+    if sum(cur_scared_times) > 0:
+        return 100 * curr_food_count
+    else:
+        return ghost_distance - curr_food_count
 
 
 """ HELPER FUNCTIONS """
 
-def breadthFirstSearch(state, target):
+def breadthFirstSearch(state):
     """Search the shallowest nodes in the search tree first."""
-    # a queue of path list [((x, y), action, cost)]
-    start_pos = state.getPacmanPosition()
     queue = util.Queue()
-    queue.push([(start_pos, 0)])
-    # a dict of {pos: cost}
-    seen = {start_pos: 0}
+    queue.push([state])
+    seen = {state.getPacmanPosition()}
     while not queue.isEmpty():
-        path = queue.pop()
-        cur_pos = path[-1][0]
-        cost = len(path)
+        curr_state_list = queue.pop()
+        curr_state = curr_state_list[-1]
+        curr_pos = curr_state.getPacmanPosition()
+        cost = len(curr_state_list)
 
-        if cur_pos == target:
+        if curr_pos in state.getFood().asList():
             return cost
 
-        for succ_state in [state.generatePacmanSuccessor(action) for action in state.getLegalActions()]:
+        for action in curr_state.getLegalActions():
+            succ_state = curr_state.generatePacmanSuccessor(action)
             # cycle checking
             succ_pos = succ_state.getPacmanPosition()
-            if not succ_pos in seen or cost < seen[succ_pos]:
-                seen[succ_pos] = cost
-                queue.push(path + [(succ_pos, cost)])
+            if succ_pos not in seen:
+                seen.add(succ_pos)
+                queue.push(curr_state_list + [succ_state])
+        # print seen
 
     print "No solution found using BFS"
     return None
-
-def mazeDistance(state, target):
-    """
-    Returns the maze distance between any two points, using the search functions
-    you have already built. The gameState can be any game state -- Pacman's
-    position in that state is ignored.
-
-    Example usage: mazeDistance( (2,4), (5,6), gameState)
-
-    This might be a useful helper function for your ApproximateSearchAgent.
-    """
-    x1, y1 = state.getPacmanPosition()
-    x2, y2 = target
-    walls = state.getWalls()
-    assert not walls[x1][y1], 'point1 is a wall: ' + str(state.getPacmanPosition())
-    assert not walls[x2][y2], 'point2 is a wall: ' + str(target)
-    return breadthFirstSearch(state, target)
 
 # Abbreviation
 better = betterEvaluationFunction
